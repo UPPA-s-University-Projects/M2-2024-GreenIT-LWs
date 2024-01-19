@@ -18,6 +18,8 @@
 \usepackage{tabularx}
 \usepackage{titlesec}
 \usepackage{setspace}
+\usepackage{listings}
+\usepackage{cite}
 
 
 \begin{document}
@@ -32,7 +34,7 @@
   
 		\vspace{1cm}
   
-        {\bfseries\Huge TP GREEN IT 2}
+        {\bfseries\Huge TP GREEN IT 3}
 		
 		
 		\vspace*{1cm}
@@ -130,128 +132,103 @@ COMBIER \textsc{Clement}\\
 
 \chapter{\centering Introduction}
 
-\subsection{Contexte du projet}
-Pour ce second projet, nous souhaitons réaliser des modèles de puissance (Power Model) à travers l'utilisation PowerSpy, ainsi que de l'outil de benchmark CPUPowerBench (https://github.com/joular/cpupowerbench).
-En green IT, la réalisation de Power model permettent de créer des analyses statistiques à l'aide de modèle de régression afin de pouvoir prédire la consomation d'un équipement.
+\subsection{Contexte du projet & objectif de l'étude}
+Pour ce dernier projet, nous souhaitons mettre en lumière l'éfficacité de différents programmes sous plusieurs languages de programmations. 
+Il n'est pas question ici de mettre en lumière quel language consomme le moins, car cette problématique dépend du projet en lui même. Quel est le but du projet? Son périmètre? 
+Un certain language peut être mieux adapté pour les systèmes embarqués, et un autre pour les web services. Chaque utilisation d'un language dépend tout d'abord du projet.
+Cependant, pour les mêmes algorithmes, nous souhaitons voir quel language est le moins consommateur niveau énergétique pour comparaison. Ces algorithmes étant très simples, ils nous permettront de voir quel language pourrait être le mieux adapté dans notre contexte.
 
+Nous avons de nouveau deux expériences, une consistant à lancer plusieurs programmes en Java qui implémente les différentes structure de données que le language propose, afin de voir quel structure consomme le plus lors de la création ainsi que sa vie durant l'entièreté du programme.
+La deuxième expérience consiste à tester un même programme (programme de Ray Casting) en Java et en C pour comparer la consommation des deux languages pour un même problème.
 
-\subsection{Objectif de l'étude}
-Ic, nous travaillerons sur une RaspberryPI modèle 4 ainsi qu'un écran de la marque HP P22h G4. A travers deux expériences, nous utiliserons un Wattmètre PowerSpy ainsi que les outils du projet PowerJoular afin de relever la consommation pendant un benchmark de nos deux appareils.
-Les outils de la suite Powerjoular utilisé ici seront :
-\begin{itemize}
-    \item PowerJoular : A des fins de relevés statistiques supplémentaires (Nous avons décidé d'utiliser cet outil de façon supplémentaire à la recherche à des fins purement statistique)
-    \item CPUPowerBench : Afin de réaliser des benchmarks pour nos appareils.
-    \item PowerSpiCLI : Notre environnement se basant sur Linux à travers la Raspberry PI, nous utilisons cette outil pour prendre les mesures faites par notre appareil PowerSpy pendant les benchmarks.
-\end{itemize}
 
 \chapter{\centering Fondements Théoriques \& Méthodologie Expérimentale}
 
 \subsection{Méthodologie utilisée}
-Pour avoir des dataseets statistiquement viable à la fin, nous allons suivre une méthodologie et un process claire et définie en amont afin de réaliser les expériences dans les meilleurs conditions possibles. Les expériences étant légèrement différente, nous avons développé deux processus distincts pour réaliser cette étude.
-Voici notre méthodologie de base dans ce cas d'étude afin de répondre à la problématique de ce cas d'étude.
-\begin{enumerate}
-    \item Création de benchmark pour nos appareils
-    \item Relevé de la consommation énergétique
-    \item Création d'un modèle à partir de notre benchmark et de nos modèles
-    \item Évaluation du modèle créé
-\end{enumerate}
+Pour que nos résultats soit le plus propre possible, nous avons mis en place certaines règles pour que notre expériences soit concluante : 
+\begin{quote}
+    \begin{enumerate}
+        \item Write a loop to run each program multiple time, for at least 30 seconds.
+        \item Automate the executing of all 5 programs, and keeping timestamps for start time and end time of each program.
+        \item Add instruction for wait/sleep for 10 seconds between each program. This will help isolate the power consumption of each program later on.
+        \item Then start PowerJoular to start monitoring the power consumption and save it to a file, then run the batch script (which will run all programs).
+    \end{enumerate}
+\end{quote}
 
-Voici la méthodologie ci-dessus sour forme de diagramme librement disponible sur GitHub : 
-\begin{figure}[H]
-    \includegraphics[width=1\linewidth]{res//process/processGlob.png}
-    \caption{Méthodologie utilisée}
-    \label{fig:méthodo}
-\end{figure}
+Nous avons mis au point un script shell inspiré de MakeFile pour compiler, benchmarker, récupérer les données Power Joular et lancer tous les programmes minimumu 5 fois pendant au moins 30 secondes.
+Voici ce script Shell pour compiler les 6 programmes sur les structures de données en Java. 
+Nous avons utilisé cette même structure pour compiler les différents programmes de Ray Casting en Java et en C (en utilisant gcc pour ce dernier).
 
-Maintenant, voyons plus en détail pour chacune des expérience (pour chaque appareil testé), comment nous allons nous y prendre, en incluant les outils utilisés, les étapes clefs, les résultats et l'attente finale.
+\lstinputlisting[language=Shell]{res/code/make.sh}
 
-\subsubsection{Étude Raspberry PI}
-Pour l'étude sur la RaspberryPI, les étapes que nous avons suivi sont les suivantes :
-\begin{enumerate}
-    \item Télécharger et préparer les outils
-    \item Tuer tous les processus non nécessaire en arrière plan
-    \item Lancer l'analyse PowerSpy à l'aide de PowerSpyCLI
-    \item Lancer le benchmark à l'aide de l'outil CPUPowerBench
-    \item Enlever les périphériques de la RaspberryPI (écrans, souris, claviers, etc.)
-    \item Après la fin du benchmark, récupérer les datasets
-    \item Utiliser l'outil proposé par CPUPowerBench pour la réalisation de notre modèle à l'aide de nos trois datasets.
-    \item Réalisation de l'étude statistique et évaluation du modèle
-\end{enumerate}
-
-Voici ce processus sous forme de graph :
-\begin{figure}[H]
-    \includegraphics[width=1\linewidth]{res//process/ProcessusRPi.png}
-    \caption{Processus de l'expérience #1 sur la RaspberryPi}
-    \label{fig:experience-process_rpi}
-\end{figure}
-
-\subsubsection{Étude sur l'écran}
-Un processus similaire à était utilisé poue l'étude de notre écran HP P22h G4. Nous avons fais la même étude en modifiant les paramètres de l'écran (luminoité, contraste, etc.) comme forme de benchmark. 
 
 \chapter{\centering Résultats}
 
-\subsubsection{Raspberry Pi}
-
-\subsubsubsection{Régression Joular}
-Pour cette première expérience sur la Raspberry Pi, nous avons pris les données fournis en fin d'expérience par la suite Joular pour effectuer notre analyse. Celle-ci contenait déjà une première régression linéaire faite en python.
-Voci son résultat :
-\begin{figure}[H]
-    \includegraphics[width=1\linewidth]{res/graph/RPi/measure1.png}
-    \caption{Régression Joular}
-    \label{fig:reg_joular}
-\end{figure}
-
-comme nous pouvons le voir, le modèle de puissance suit bien une courbe de tendance linéaire. Notre score R² n'est pas muavais, à environ 99\% (R²=0,9972) et l'équation de notre courbe est la suivante : 
-\begin{equation}
-    y=0.0101x+0,0757
-    \label{eq:rpi_joular}
-\end{equation}
-La courbe verte montre nos valeurs MSE qui tourne autour de 0 mis à part certains pics allant jusqu'à maximum 0.00045 ce qui reste très bas et donc très bon. Le modèle fournis représente donc bien la consommation de notre RaspberryPi et le modèle fit bien le cas d'étude.
-
-Pour vérifier, nous avons décidé de faire la régression linéaire nous même sur Excel.
-
-\subsubsubsection{Régression manuelle}
-Cette régression a été faite sous Excel en utilisant les jeux de données de la première expérience. Voci le graphique en fin de modélisation.
-\begin{figure}[H]
-    \includegraphics[width=1\linewidth]{res/graph/RPi/regman.png}
-    \caption{Régression manuelle sur Excel}
-    \label{fig:reg_man}
-\end{figure}
-Comme précédemment, nous retrouvons une tendance linéaire, collant bien avec la régression donné par Joular et suivant le même patterne et les mêmes ordres de grandeurs. 
-L'équation ainsi que le R² sont quasiment semblable. Les résultats sont donc encourageants.
-
-\subsubsection{Écran HP P22h G4}
-Pour cette deuxième expérience, nous avons mené le même type d'expérience mais cette fois le benchmark était fait manuellement sur le moniteur (de la marque HP P22h G4) en modifiant manuellement les paramètres de ce dernier (luminosité, contraste, etc.) par intervalle régulier. Nous avons branché le WattMètre PowerSpy à l'alimentation de l'écran, et nous avons suivi quasiment le même procédé.
-Voici le modèle et le résultat :
+\subsection{Programmes de structure de données en Java}
+Pour cette première expérience, nous allons analyser les résultats pour comparer les 6 programmes sur les structures de données en Java afin de s'apercevoir de la consommation de Java lors de l'utilisation de ces structures proposées dans le language.
+Nous avons sortis deux graphiques, un sur l'utilisation du CPU et un autre sur la puissance totale consommée par chaque programme.
 
 \begin{figure}[H]
-    \includegraphics[width=1\linewidth]{res/graph/Ecran/Evolution de la puissance (luminosité).png}
-    \caption{Evolution de la puissance (luminosité)}
-    \label{fig:evolution-puis}
+    \includegraphics[width=1\linewidth]{res/graph/Datastructure/cpuuse_datastruct.png}
+    \caption{Utilisation du CPU par les 6 programme de structure de données}
+    \label{fig:cpuuse_datastruct}
+\end{figure}
+\begin{figure}[H]
+    \includegraphics[width=1\linewidth]{res/graph/Datastructure/power_datastruct.png}
+    \caption{Consommation totale de la puissance pour chaque programme de structure de données}
+    \label{fig:power_datastruct}
 \end{figure}
 
-On peut observer une augmentation de la puissance en fonction du temps de façon linéaire, qui est due à l'augmentation de la luminosité de façon périodique, les petits pics d'augmentation de puissance correspondent aux moments d'augmentation de luminosité. On peut donc constater une directe liaison entre la luminosité de l'écran et la consommation d'énergie.
-Le modèle suit bien une fonction linéaire, et comme précédemment, le score R² est très satisfaisant (R²=0.9932) et l'équation de la courbe dde tendance linéaire suivant nos résultats :
-\begin{equation}
-    y=0.00746x+5.7349
-    \label{eq:moniteur}
-\end{equation}
-Nous n'avons pas eu le temps malheureusement d'approfondir cette analyse.
+Comme nous pouvons le voir sur ces deux graphiques, la consommation et le pourcentage du CPU utilisé varie selon les programmes mais tend à suivre une certaine \textit{structure} pour les 6 programmes. Une montée haute, suivie d'une courte stabilisation avant de remonter vers la limite qui tourne à environ 50W ou 80\% de l'utilisation du CPU.
+Cependant, la différence entre tous ces programmes et le moment ou se produit cette montée. Certains programmes auront cette montée beaucoup plus tard dans leur runtime, alors que d'autres ont ce pic très tôt. Il est cependant intéressant de noter que ces programmes \textit{rapide} ont tendance à finir leurs tâches plus tôt.
+Malheureusement, pas contrainte de temps et personnels, nous n'aurons pas eu le temps de pousser cette étude statistique plus loin pour montrer quels programmes consomment le plus.
 
-\chapter{\centering Discussion}
-Ces résultats permettent de montrer l'utilité du benchmarking et de créer des modèles de puissance (Power Model) dans le domaine du GreenIT.
-Mais nous avons quelques points que nous devons éclairer et discuter pour expliquer l'état de cette étude.
+\subsection{Ray Casting en Java & C}
+Pour cette deuxième expérience, nous avons expérimenter sur un même algorithme dans deux languages différents. (Nous n'auraons encore une fois pas eu le temps d'expérimenter avec d'autres languages comme initialement prévue.)
+L'algorithme de Ray Casting est :
+\begin{quote}
+    Given a point and a polygon, check if the point is inside or outside the polygon using the ray-casting algorithm.
+\end{quote}\cite{wiki:xxx}
 
-\subsection{Fiabilité des outils de mesure utilisés}
-Les autres outils ont déjà prouvé être efficace dans ce domaine, et la suite d'outils du projet Joular sont constamment amélioré et mis à jour (i.e. ce n'est pas un abandonware délaissé mai un projet activement développé!)
+\subsubsection{Version Java}
+Voici les résultats pour la version Java :
+\begin{figure}[H]
+    \includegraphics[width=1\linewidth]{res/graph/Raycasting/raycasting java.png}
+    \caption{Performance de l'algorithme de Ray Casting en Java}
+    \label{fig:java_raycasting}
+\end{figure}
 
-\subsection{Limitations de l'étude et pistes pour des recherches futures}
-Pour l'instant, notre étude reste très simple ou nous avons beaucoup d'étapes manuelles. De plus, les RaspberryPi utilisées ont étaient utilisées par d'autres étudiants auparavant et incluaient déjà des applications, outils, etc. déjà utilisés. Une RaspberryPi avec un OS fraîchement installé pourrait donner de meilleurs relevés sur la consommation d'une RPi à travers d'un benchmark.
-Par manque de temps est à cause de problème rencontré avec le matériel, nous n'avons pas eu la possibilité de pousser nos analyses et nos expérimentations avec la création d'autres modèles.
+Un peu comme nos tests sur les programmes de structure de données, nous pouvon retrouver cette forme des courbes avec le premier pic, une stabilisation, un deuxième pic avant d'atteindre les limites où les courbes oscillent. 
+Et nous avons une nouvelle fois une cohérence entre l'utilisation du CPU et la puissance consommée.
+
+\subsubsection{Version C}
+Voici les résultats pour la version C :
+\begin{figure}[H]
+    \includegraphics[width=1\linewidth]{res/graph/Raycasting/raycasting c.png}
+    \caption{Performance de l'algorithme de Ray Casting en C}
+    \label{fig:c_raycasting}
+\end{figure}
+
+Ici nous avons une bien grande différence avec le reste de nos résultats. La consommation et le pourcentage du CPU utilisé sont beaucoup plus constant à travers l'entiéreté de la vie du programme. Surtout au niveau du pourcentage d'utilisation du CPU.
+
+Voici un graphique combinant les deux résultats :
+\begin{figure}[H]
+    \includegraphics[width=1\linewidth]{res/graph/Raycasting/raycasting_combined.png}
+    \caption{Graphique des résultats combiné}
+    \label{fig:raycasting_combined}
+\end{figure}
+
+Nous pouvons voir ici que dès le départ, la version en C consomme beaucoup plus de puissance et d'utilisation du CPU comparé au programme en Java.
 
 \chapter{\centering Conclusion}
-La réalisation de benchmark sur différents appareils IT sont très utiles pour l'avancer et la démocratisation du domaine du Green IT.
-Il est important de régulièrement testé nos appareils pour vérifier leur efficacité, leur consommation et potentiellement détecter les appareils qui ont des défauts majeurs qui font que nous perdons plus économiquement qu'ils nous en apportent.
+Nous avons donc une nette différence notable entre la version Java et C du programme de Ray Casting. Pour ce genre d'algorithme, l'utilisation de Java est préférable car le language est mieux équipé pour s'attaquer à ce genre de problématique.
+Cependant, il reste important de se souvenir que dans certains cas, le language C pourrait être préférable à C. Et nous ne prenons en compte ici que deux languages différents mais qui reste assez lié entre eux.
+
+\bibliographystyle{plain}
+\bibliography{ref}
+\printglossary
+
+
 
 
 \end{document}
